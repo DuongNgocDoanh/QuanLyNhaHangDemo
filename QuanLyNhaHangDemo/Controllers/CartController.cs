@@ -27,25 +27,32 @@ namespace QuanLyNhaHangDemo.Controllers
         {
             return View("~/Views/Checkout/Index.cshtml");
         }
+        [HttpPost]
         public async Task<IActionResult> Add(int Id)
         {
             ProductModel product = await _dataContext.Products.FindAsync(Id);
+            if (product == null)
+            {
+                return NotFound(new { success = false, message = "Product not found." });
+            }
+
             List<CartItemModel> cart = HttpContext.Session.GetJson<List<CartItemModel>>("Cart") ?? new List<CartItemModel>();
-            CartItemModel cartItems = cart.Where(c=>c.ProductId== Id).FirstOrDefault();
-            if(cartItems == null)
+            CartItemModel cartItem = cart.Where(c => c.ProductId == Id).FirstOrDefault();
+
+            if (cartItem == null)
             {
                 cart.Add(new CartItemModel(product));
             }
             else
             {
-
-                cartItems.Quantity += 1;
+                cartItem.Quantity += 1;
             }
-            HttpContext.Session.SetJson("Cart", cart);
-            TempData["success"] = "Add Item to cart Successfully";
-            return Redirect(Request.Headers["Referer"].ToString());
 
+            HttpContext.Session.SetJson("Cart", cart);
+
+            return Json(new { success = true, message = "Added to cart successfully!", totalItems = cart.Count });
         }
+
         public async Task<IActionResult> Decrease(int Id)
         {
             List<CartItemModel> cart = HttpContext.Session.GetJson<List<CartItemModel>>("Cart");

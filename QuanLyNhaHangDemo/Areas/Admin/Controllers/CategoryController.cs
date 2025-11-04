@@ -9,7 +9,7 @@ using QuanLyNhaHangDemo.Repository;
 namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize]
+    
     public class CategoryController:Controller
     {
         private readonly DataContext _dataContext;
@@ -18,10 +18,13 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             _dataContext = context;
             
         }
+        
         public async Task<IActionResult> Index()
         {
             return View(await _dataContext.Categories.OrderByDescending(p => p.Id).ToListAsync());
         }
+
+
         [HttpGet]
         public IActionResult Create()
         {

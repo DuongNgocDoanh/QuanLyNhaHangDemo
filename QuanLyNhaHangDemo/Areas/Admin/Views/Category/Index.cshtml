@@ -1,10 +1,18 @@
 ﻿@model IEnumerable<CategoryModel>
 @{
     ViewData["title"] = "Category Listed";
+    Paginate pager = new Paginate();
+    int pageNo = 0;
+    if(ViewBag.PageNo != null)
+    {
+        pager = ViewBag.Pager;
+        pageNo = pager.CurrentPage;
+    }
+
 }
 <h3>List Category</h3>
 <a asp-area="Admin" asp-action="Create" asp-controller="Category">Add Category</a>
-<table class="table">
+<table class="table" id="myTable">
     <thead>
         <tr>
             <th scope="col">#</th>
@@ -12,6 +20,7 @@
             <th scope="col">Category Description</th> 
             <th scope="col">Category Slug</th>
             <th scope="col">Category Status</th>
+            <th scope="col">Action</th>
 
         </tr>
     </thead>
@@ -40,6 +49,6 @@
             </tr>
         }
 
-
+        <partial name="_paging" model="@pager" />
     </tbody>
 </table>

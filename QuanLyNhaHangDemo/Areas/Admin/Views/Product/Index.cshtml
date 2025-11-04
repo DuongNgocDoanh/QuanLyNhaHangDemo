@@ -4,7 +4,7 @@
 }
 <h3>List Products</h3>
 <a asp-area="Admin" asp-action="Create" asp-controller="Product">Add Product</a>
-<table class="table">
+<table class="table" id="myTable">
     <thead>
         <tr>
             <th scope="col">#</th>
@@ -15,6 +15,7 @@
             <th scope="col">Product Category</th>
             <th scope="col">Product Brand</th>
             <th scope="col">Product Manage</th>
+            <th scope="col">Action</th>
         </tr>
     </thead>
     <tbody>
