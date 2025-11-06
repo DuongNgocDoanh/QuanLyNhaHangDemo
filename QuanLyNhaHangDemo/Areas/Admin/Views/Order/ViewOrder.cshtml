@@ -29,7 +29,7 @@
                 <th>Product Price</th>
                 <th>Quantity</th>
                 <th>Subtotal</th>
-                <th></th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -47,7 +47,20 @@
                     <td>@item.Price.ToString("#,##0 VNĐ")</td>
                     <td>@item.Quantity</td>
                     <td>@subtotal.ToString("#,##0 VNĐ")</td>
-                    <td></td>
+                    <td>
+                        @if (item.Status == 0)
+                        {
+                            <span class="text text-success">Đang Chuẩn Bị</span>
+                        }
+                        else if(item.Status==1)
+                        {
+                            <span class="text text-erroe">Đang chế biến</span>
+                        }
+                        else
+                        {
+                            <span class="text text-erroe">Hoàn Thành</span>
+                        }
+                    </td>
                 </tr>
             }
             <tr>
@@ -58,16 +71,17 @@
                 <td></td>
                 <td></td>
                 <td>Tổng : @total.ToString("#,##0 đ")</td>
-                <td class="status-column">
-                    @if (@ViewBag.Status!=3)
-                    {
+                <td>
                         <select class="form-control select-update-order">
-                            <option value="1">Đơn hàng mới</option>
-                            <option value="0">Đã xử lý</option>
+                            @foreach (var item in ViewBag.StatusList as List<SelectListItem>)
+                            {
+                                <option value="@item.Value" selected="@(item.Value == ViewBag.Status.ToString() ? "selected" : null)">
+                                    @item.Text
+                                </option>
+                            }
                         </select>
-                    }
                 </td>
-                
+                    
             </tr>
         </tbody>
     </table>
@@ -117,8 +131,10 @@
                     success: function (result) {
                         // Handle successful update
                         if (result.success) {
-                          
-                            Swal.fire("Cập nhật đơn hàng thành công.");
+
+                            Swal.fire("Cập nhật đơn hàng thành công.").then(() => {
+                                window.location.href = '@Url.Action("Index")';  // Chuyển lại trang Index
+                            });
                         } else {
                           
                             Swal.fire("Cập nhật đơn hàng thất bại." + result.message);

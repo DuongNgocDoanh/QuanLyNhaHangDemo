@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyNhaHangDemo.Repository;
 
@@ -23,16 +24,27 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
         }
         [HttpGet]
         [Route("ViewOrder")]
-        public async Task<IActionResult> ViewOrder(string ordercode)
+        public IActionResult ViewOrder(string orderCode)
         {
-            var DetailsOrder = await _dataContext.OrderDetails.Include(od => od.Product)
-                .Where(od => od.OrderCode == ordercode).ToListAsync();
+            var orderDetails = _dataContext.OrderDetails
+                                           .Where(o => o.OrderCode == orderCode)
+                                           .Include(o => o.Product)
+                                           .ToList();
 
-            var Order = _dataContext.Orders.Where(o => o.OrderCode == ordercode).First();
+            ViewBag.Status = _dataContext.Orders
+                                         .FirstOrDefault(o => o.OrderCode == orderCode).Status;
 
-            ViewBag.Status = Order.Status;
-            return View(DetailsOrder);
+            ViewBag.StatusList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "1", Text = "Đơn hàng mới" },
+                new SelectListItem { Value = "2", Text = "Đã giao hàng" },
+                new SelectListItem { Value = "3", Text = "Đang xử lý" },
+                new SelectListItem { Value = "4", Text = "Đã hủy" }
+            };
+
+            return View(orderDetails);
         }
+
         [HttpPost]
         [Route("UpdateOrder")]
         public async Task<IActionResult> UpdateOrder(string ordercode, int status)

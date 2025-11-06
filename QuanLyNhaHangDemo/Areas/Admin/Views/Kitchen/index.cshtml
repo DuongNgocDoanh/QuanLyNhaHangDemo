@@ -1,0 +1,46 @@
+﻿@model IEnumerable<OrderDetails>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tên món</th>
+            <th>Số lượng</th>
+            <th>Loại món</th>
+            <th>Trạng thái</th>
+            <th>Cập nhật</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Product.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.Product.Category.Name</td>
+                <td>
+                    @{
+                        var statusText = item.Status switch
+                        {
+                            0 => "Chưa làm",
+                            1 => "Đang làm",
+                            2 => "Hoàn thành",
+                            _ => "Không xác định"
+                        };
+                    }
+                    @statusText
+                </td>
+                <td>
+                    <form asp-action="UpdateStatus" method="post">
+                        <input type="hidden" name="orderDetailId" value="@item.Id" />
+                        <select name="status" class="form-select">
+                            <option value="0">Đang Chuẩn Bị Nguyên Liệu</option>
+                            <option value="1">Đang làm</option>
+                            <option value="2">Hoàn thành</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Lưu</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

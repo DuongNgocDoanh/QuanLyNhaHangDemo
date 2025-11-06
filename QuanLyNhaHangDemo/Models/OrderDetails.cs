@@ -9,8 +9,10 @@ namespace QuanLyNhaHangDemo.Models
         public string OrderCode { get; set; }
         public int ProductId { get; set; }
         public int Quantity { get; set; }
+        public int Status { get; set; }
         public decimal Price { get; set; }
         [ForeignKey("ProductId")]
         public ProductModel Product { get; set; }
+
     }
 }

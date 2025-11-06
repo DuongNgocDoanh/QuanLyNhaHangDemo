@@ -88,7 +88,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
                 existingBrands.Name = brand.Name;
                 existingBrands.Slug = brand.Slug;
                 existingBrands.Description = brand.Description;
-
+                existingBrands.Status = brand.Status;
                 await _dataContext.SaveChangesAsync();
                 TempData["success"] = "Cập nhật danh mục thành công";
                 return RedirectToAction("Index");
