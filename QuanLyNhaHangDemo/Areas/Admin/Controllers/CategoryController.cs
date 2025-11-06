@@ -95,7 +95,8 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
                 existingCategory.Name = category.Name;
                 existingCategory.Slug = category.Slug;
                 existingCategory.Description = category.Description;
-
+                existingCategory.Status = category.Status;
+                existingCategory.Priority = category.Priority;
                 await _dataContext.SaveChangesAsync();
                 TempData["success"] = "Cập nhật danh mục thành công";
                 return RedirectToAction("Index");
@@ -123,7 +124,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             CategoryModel category = await _dataContext.Categories.FindAsync(Id);   
             _dataContext.Categories.Remove(category);
             await _dataContext.SaveChangesAsync();
-            TempData["error"] = "San pham da xoa";
+            TempData["success"] = "Đã xóa danh mục";
             return RedirectToAction("Index");
         }
         

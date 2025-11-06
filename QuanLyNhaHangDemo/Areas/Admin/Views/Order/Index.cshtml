@@ -31,13 +31,17 @@
                     }
                     else if (item.Status == 2)
                     {
-                        <span class="text text-success">Đã giao hàng</span>
+                        <span class="text text-success">Hoàn thành</span>
                     }
                     else if (item.Status == 3)
                     {
-                        <span class="text text-success">Đang xử lý</span>
+                        <span class="text text-success">Đã thanh toán</span>
                     }
                     else if (item.Status == 4)
+                    {
+                        <span class="text text-success">Đang xử lý</span>
+                    }
+                    else if (item.Status == 5)
                     {
                         <span class="text text-success">Đã hủy</span>
                     }
@@ -45,7 +49,7 @@
                 </td>
                 <td>
                     <a asp-action="ViewOrder" class="btn btn-warning btn-sm" asp-controller="Order" asp-route-ordercode="@item.OrderCode">View Order</a>
-                    <a asp-action="Delete" class="btn btn-danger btn-sm confirmDeletion" asp-controller="Order" asp-route-Id="@item.OrderCode">Delete</a>
+                    <a asp-action="Delete" class="btn btn-danger btn-sm confirmDeletion" asp-controller="Order" asp-route-ordercode="@item.OrderCode">Delete</a>
                 </td>
             </tr>
         }

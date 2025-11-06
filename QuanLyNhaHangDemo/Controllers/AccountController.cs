@@ -45,23 +45,32 @@ namespace QuanLyNhaHangDemo.Controllers
         {
             if (ModelState.IsValid)
             {
-                AppUserModel newUser = new AppUserModel { UserName=user.Username,Email=user.Email};
-                IdentityResult result = await _userManage.CreateAsync(newUser,user.Password);
+                AppUserModel newUser = new AppUserModel
+                {
+                    UserName = user.Username,
+                    Email = user.Email
+                };
+
+                IdentityResult result = await _userManage.CreateAsync(newUser, user.Password);
+
                 if (result.Succeeded)
                 {
-                    TempData["success"] = "Tao User Thanh Cong";
+                    // Gán role mặc định
+                    await _userManage.AddToRoleAsync(newUser, "Customer");
+
+                    TempData["success"] = "Tạo User thành công và đã gán quyền Customer";
                     return Redirect("/account/login");
                 }
-                foreach(IdentityError error in result.Errors)
+
+                foreach (IdentityError error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
                 }
-                
-
             }
-            
+
             return View(user);
         }
+
         public async Task<IActionResult> Logout(string returnUrl = "/")
         {
             await _signInManager.SignOutAsync();

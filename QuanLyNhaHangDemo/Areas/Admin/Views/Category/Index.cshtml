@@ -1,13 +1,6 @@
 ﻿@model IEnumerable<CategoryModel>
 @{
     ViewData["title"] = "Category Listed";
-    Paginate pager = new Paginate();
-    int pageNo = 0;
-    if(ViewBag.PageNo != null)
-    {
-        pager = ViewBag.Pager;
-        pageNo = pager.CurrentPage;
-    }
 
 }
 <h3>List Category</h3>
@@ -20,6 +13,7 @@
             <th scope="col">Category Description</th> 
             <th scope="col">Category Slug</th>
             <th scope="col">Category Status</th>
+            <th scope="col">Category Priority</th>
             <th scope="col">Action</th>
 
         </tr>
@@ -43,12 +37,34 @@
                     }
                 </td>
                 <td>
+                    @if(item.Priority == 0)
+                    {
+                        <span class="text text-info">Món khai vị</span>
+                    }
+                    else if(item.Priority == 1)
+                    {
+                        <span class="text text-info">Nước giải khát</span>
+                    }
+                    else if(item.Priority == 2)
+                    {
+                        <span class="text text-info">Món chiên rán</span>
+                    }
+                    else if(item.Priority == 3)
+                    {
+                        <span class="text text-info">Món chính</span>
+                    }
+                    else
+                    {
+                        <span class="text text-info">Món tráng miệng</span>
+                    }
+                </td>
+                <td>
                     <a asp-action="Edit" class="btn btn-warning btn-sm" asp-controller="Category" asp-route-Id="@item.Id">Edit</a>
                     <a asp-action="Delete" class="btn btn-danger btn-sm confirmDeletion" asp-controller="Category" asp-route-Id="@item.Id">Delete</a>
                 </td>
             </tr>
         }
 
-        <partial name="_paging" model="@pager" />
+        
     </tbody>
 </table>

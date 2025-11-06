@@ -13,23 +13,28 @@ namespace QuanLyNhaHangDemo.Controllers
         }
         public async Task<IActionResult> Index(string Slug = "")
         {
-            // Tìm danh mục theo slug
             var brand = await _dataContext.Brands
-                .FirstOrDefaultAsync(c => c.Slug == Slug);
+                .FirstOrDefaultAsync(c => c.Slug == Slug && c.Status == 1);
 
-            // Nếu không tồn tại, quay về trang chủ
+            // Nếu không tồn tại hoặc bị ẩn, quay về trang chủ
             if (brand == null)
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", "Home");
 
-            // Lấy danh sách sản phẩm theo danh mục
+            // Lấy danh sách sản phẩm theo brand
             var productsByBrand = await _dataContext.Products
-                .Where(p => p.BrandId == brand.Id)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.BrandId == brand.Id
+                            && p.Category.Status == 1)
                 .OrderByDescending(p => p.Id)
                 .ToListAsync();
+
+            ViewBag.BrandName = brand.Name;
 
             // Gửi danh sách sản phẩm sang View
             return View(productsByBrand);
         }
+
     }
 }
  

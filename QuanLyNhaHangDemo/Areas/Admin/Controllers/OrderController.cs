@@ -17,7 +17,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             _dataContext = context;
         }
         [HttpGet]
-        [Route("Index")]
+        
         public async Task<IActionResult> Index()
         {
             return View(await _dataContext.Orders.OrderByDescending(p => p.Id).ToListAsync());
@@ -37,9 +37,11 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             ViewBag.StatusList = new List<SelectListItem>
             {
                 new SelectListItem { Value = "1", Text = "Đơn hàng mới" },
-                new SelectListItem { Value = "2", Text = "Đã giao hàng" },
-                new SelectListItem { Value = "3", Text = "Đang xử lý" },
-                new SelectListItem { Value = "4", Text = "Đã hủy" }
+                new SelectListItem { Value = "2", Text = "Hoàn thành" },
+                new SelectListItem { Value = "3", Text = "Đã thanh toán" },
+                new SelectListItem { Value = "4", Text = "Đang xử lý" },
+                new SelectListItem { Value = "5", Text = "Đang hủy" },
+
             };
 
             return View(orderDetails);
@@ -97,6 +99,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
                 return StatusCode(500, "An error occurred while deleting the order.");
             }
         }
-
     }
 }
+
+    

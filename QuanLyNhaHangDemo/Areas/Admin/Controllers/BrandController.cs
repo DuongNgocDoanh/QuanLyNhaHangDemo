@@ -115,7 +115,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             BrandModel brand = await _dataContext.Brands.FindAsync(Id);
             _dataContext.Brands.Remove(brand);
             await _dataContext.SaveChangesAsync();
-            TempData["error"] = "San pham da xoa";
+            TempData["success"] = "Đã xóa thương hiệu";
             return RedirectToAction("Index");
         }
     }

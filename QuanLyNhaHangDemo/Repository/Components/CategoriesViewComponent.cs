@@ -6,10 +6,20 @@ namespace QuanLyNhaHangDemo.Repository.Components
     public class CategoriesViewComponent : ViewComponent
     {
         private readonly DataContext _dataContext;
+
         public CategoriesViewComponent(DataContext context)
         {
             _dataContext = context;
         }
-        public async Task<IViewComponentResult> InvokeAsync()=>View(await _dataContext.Categories.ToListAsync());
+
+        public async Task<IViewComponentResult> InvokeAsync()
+        {
+            // Chỉ lấy những category đang active (Status = 1)
+            var activeCategories = await _dataContext.Categories
+                .Where(c => c.Status == 1)
+                .ToListAsync();
+
+            return View(activeCategories);
+        }
     }
 }

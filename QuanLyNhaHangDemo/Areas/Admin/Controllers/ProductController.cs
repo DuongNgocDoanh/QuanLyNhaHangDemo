@@ -40,6 +40,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
         {
             ViewBag.Categories = new SelectList(_dataContext.Categories, "Id", "Name", product.CategoryId);
             ViewBag.Brands = new SelectList(_dataContext.Brands, "Id", "Name", product.BrandId);
+            
             if(ModelState.IsValid)
             {
                 
@@ -175,7 +176,7 @@ namespace QuanLyNhaHangDemo.Areas.Admin.Controllers
             }
             _dataContext.Products.Remove(product);
             await _dataContext.SaveChangesAsync();
-            TempData["error"] = "San pham da xoa";
+            TempData["success"] = "Sản phẩm đã xóa";
             return RedirectToAction("Index");
         }
     }

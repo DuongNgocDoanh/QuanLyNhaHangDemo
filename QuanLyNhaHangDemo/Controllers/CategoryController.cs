@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore; // nhớ import để dùng ToListAsync()
 using QuanLyNhaHangDemo.Models;
 using QuanLyNhaHangDemo.Repository;
+using System.Drawing.Drawing2D;
 
 namespace QuanLyNhaHangDemo.Controllers
 {
@@ -18,7 +19,7 @@ namespace QuanLyNhaHangDemo.Controllers
         {
             // Tìm danh mục theo slug
             var category = await _dataContext.Categories
-                .FirstOrDefaultAsync(c => c.Slug == Slug);
+                .FirstOrDefaultAsync(c => c.Slug == Slug&&c.Status==1);
 
             // Nếu không tồn tại, quay về trang chủ
             if (category == null)
@@ -26,7 +27,10 @@ namespace QuanLyNhaHangDemo.Controllers
 
             // Lấy danh sách sản phẩm theo danh mục
             var productsByCategory = await _dataContext.Products
-                .Where(p => p.CategoryId == category.Id)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.CategoryId == category.Id
+                            && p.Brand.Status == 1)
                 .OrderByDescending(p => p.Id)
                 .ToListAsync();
 
