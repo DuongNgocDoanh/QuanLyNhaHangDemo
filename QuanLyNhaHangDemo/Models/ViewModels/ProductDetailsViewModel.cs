@@ -10,5 +10,7 @@ namespace QuanLyNhaHangDemo.Models.ViewModels
         public string Name { get; set; }
         [Required(ErrorMessage = "Yeu cau nhap ten thuong hieu")]
         public string Email { get; set; }
+
+        public List<ProductMaterialModel> Materials { get; set; }
     }
 }

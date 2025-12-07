@@ -24,6 +24,9 @@ namespace QuanLyNhaHangDemo.Models
 
         public CategoryModel Category { get; set; }
         public BrandModel Brand { get; set; }
+
+        public int Quantity{ get; set; }
+        public int Sold { get; set; }
         public string Image {  get; set; }
         public RatingModel Ratings { get; set; }
         [NotMapped]

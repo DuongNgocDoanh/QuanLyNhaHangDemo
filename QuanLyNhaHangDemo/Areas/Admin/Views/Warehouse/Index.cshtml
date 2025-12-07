@@ -1,0 +1,62 @@
+﻿@model IEnumerable<QuanLyNhaHangDemo.Models.MaterialModel>
+@{
+    ViewData["Title"] = "Quản lý kho";
+}
+
+<h3>Quản lý Nguyên liệu</h3>
+
+<a asp-action="CreateMaterial" class="btn btn-primary mb-3">+ Thêm nguyên liệu</a>
+<a asp-action="ImportHistory" class="btn btn-primary mb-3">Lịch sử nhập hàng</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Tên</th>
+            <th>Đơn vị</th>
+            <th>Tồn kho</th>
+            <th>Ngưỡng cảnh báo</th>
+            <th>Đơn giá nhập mới nhất</th>
+            <th>Trạng thái</th>
+            <th width="180px">Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var priceDict = ViewBag.LatestPriceByMaterial as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+        }
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td>@m.Name</td>
+                <td>@m.Unit</td>
+                <td>@m.CurrentQuantity</td>
+                <td>@m.ReorderLevel</td>
+                <td>
+                    @if (priceDict.ContainsKey(m.Id))
+                    {
+                        @priceDict[m.Id].ToString("N0") 
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa có</span>
+                    }
+                </td>
+                <td>
+                    @if (m.Status == 1)
+                    {
+                        <span class="badge bg-success">Đang dùng</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Ngừng dùng</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="EditMaterial" asp-route-id="@m.Id" class="btn btn-sm btn-info">Sửa</a>
+                    <a asp-action="Import" asp-route-id="@m.Id" class="btn btn-sm btn-success">Nhập</a>
+                    <a asp-action="ImportHistoryTungMon" asp-route-id="@m.Id" class="btn btn-sm btn-warning">Lịch sử nhập hàng</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

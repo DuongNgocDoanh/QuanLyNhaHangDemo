@@ -1,0 +1,306 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <h5>Số lượng sản phẩm</h5>
+        <p>@ViewBag.CountProducts</p>
+    </div>
+    <div class="col-md-3">
+        <h5>Số lượng đơn hàng</h5>
+        <p>@ViewBag.CountOrders</p>
+    </div>
+    <div class="col-md-3">
+        <h5>Số lượng danh mục</h5>
+        <p>@ViewBag.CountCategories</p>
+    </div>
+    <div class="col-md-3">
+        <h5>Số lượng người dùng</h5>
+        <p>@ViewBag.CountUsers</p>
+    </div>
+</div>
+
+<!-- Bộ lọc -->
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Khoảng thời gian</label>
+        <select id="filterType" class="form-select">
+            <option value="all">Tất cả</option>
+            <option value="week">7 ngày gần nhất</option>
+            <option value="month">Tháng này</option>
+            <option value="year">Năm nay</option>
+            <option value="custom">Tùy chọn</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Từ ngày</label>
+        <input type="date" id="fromDate" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Đến ngày</label>
+        <input type="date" id="toDate" class="form-control" />
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button id="btnFilter" class="btn btn-primary w-100">Lọc</button>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <h6>Tổng doanh thu:</h6>
+        <p id="totalRevenue"></p>
+    </div>
+    <div class="col-md-4">
+        <h6>Tổng lợi nhuận:</h6>
+        <p id="totalProfit"></p>
+    </div>
+    <div class="col-md-4">
+        <h6>Tổng chi phí nhập kho:</h6>
+        <p id="totalImportCost"></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h4>Biểu đồ bán hàng (doanh thu / lợi nhuận / số lượng)</h4>
+        <canvas id="salesChart"></canvas>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h4>Biểu đồ nhập kho</h4>
+        <canvas id="importChart"></canvas>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Top sản phẩm bán được nhiều nhất</h4>
+        <canvas id="topSoldChart"></canvas>
+        <table class="table table-sm mt-2" id="topSoldTable">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Doanh thu</th>
+                    <th>Lợi nhuận</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h4>Top sản phẩm lợi nhuận cao nhất</h4>
+        <canvas id="topProfitChart"></canvas>
+        <table class="table table-sm mt-2" id="topProfitTable">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Doanh thu</th>
+                    <th>Lợi nhuận</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let salesChartInstance, importChartInstance, topSoldChart, topProfitChart;
+
+    function formatMoney(v) {
+        if (v == null) v = 0;
+        return v.toLocaleString('vi-VN') + ' đ';
+    }
+
+    function loadDashboard(type, from, to) {
+        $.post("/Admin/Dashboard/GetChartData", {
+            type: type,
+            startDate: from,
+            endDate: to
+        }).done(function (response) {
+            if (!response) return;
+
+            // Tổng
+            $('#totalRevenue').text(formatMoney(response.totalRevenue));
+            $('#totalProfit').text(formatMoney(response.totalProfit));
+            $('#totalImportCost').text(formatMoney(response.totalImportCost));
+
+            // ===== BÁN HÀNG =====
+            var sales = response.sales || [];
+            var salesLabels = sales.map(x => x.date);
+            var revenueData = sales.map(x => x.revenue);
+            var profitData = sales.map(x => x.profit);
+            var quantityData = sales.map(x => x.quantity);
+
+            if (salesChartInstance) salesChartInstance.destroy();
+
+            var ctxSales = document.getElementById("salesChart").getContext("2d");
+            salesChartInstance = new Chart(ctxSales, {
+                data: {
+                    labels: salesLabels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Số lượng bán',
+                            data: quantityData,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'line',
+                            label: 'Doanh thu',
+                            data: revenueData,
+                            yAxisID: 'y1',
+                            tension: 0.2
+                        },
+                        {
+                            type: 'line',
+                            label: 'Lợi nhuận',
+                            data: profitData,
+                            yAxisID: 'y1',
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: {
+                            position: 'left',
+                            title: { display: true, text: 'Số lượng' }
+                        },
+                        y1: {
+                            position: 'right',
+                            title: { display: true, text: 'Doanh thu / Lợi nhuận' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+
+            // ===== NHẬP KHO =====
+            var imports = response.imports || [];
+            var importLabels = imports.map(x => x.date);
+            var importValues = imports.map(x => x.importCost);
+
+            if (importChartInstance) importChartInstance.destroy();
+
+            var ctxImport = document.getElementById("importChart").getContext("2d");
+            importChartInstance = new Chart(ctxImport, {
+                type: 'bar',
+                data: {
+                    labels: importLabels,
+                    datasets: [{
+                        label: 'Chi phí nhập kho',
+                        data: importValues
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // ===== TOP SẢN PHẨM BÁN NHIỀU =====
+            var topSold = response.topByQuantity || [];
+            var soldLabels = topSold.map(x => x.productName);
+            var soldQuantities = topSold.map(x => x.quantitySold);
+
+            if (topSoldChart) topSoldChart.destroy();
+
+            var ctxTopSold = document.getElementById("topSoldChart").getContext("2d");
+            topSoldChart = new Chart(ctxTopSold, {
+                type: 'bar',
+                data: {
+                    labels: soldLabels,
+                    datasets: [{
+                        label: 'Số lượng bán',
+                        data: soldQuantities
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true
+                }
+            });
+
+            var soldTbody = $('#topSoldTable tbody');
+            soldTbody.empty();
+            topSold.forEach(x => {
+                soldTbody.append(`
+                    <tr>
+                        <td>${x.productName}</td>
+                        <td>${x.quantitySold}</td>
+                        <td>${formatMoney(x.revenue)}</td>
+                        <td>${formatMoney(x.profit)}</td>
+                    </tr>
+                `);
+            });
+
+            // ===== TOP SẢN PHẨM LỢI NHUẬN CAO =====
+            var topProfit = response.topByProfit || [];
+            var profitLabels = topProfit.map(x => x.productName);
+            var profitValues = topProfit.map(x => x.profit);
+
+            if (topProfitChart) topProfitChart.destroy();
+
+            var ctxTopProfit = document.getElementById("topProfitChart").getContext("2d");
+            topProfitChart = new Chart(ctxTopProfit, {
+                type: 'bar',
+                data: {
+                    labels: profitLabels,
+                    datasets: [{
+                        label: 'Lợi nhuận',
+                        data: profitValues
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true
+                }
+            });
+
+            var profitTbody = $('#topProfitTable tbody');
+            profitTbody.empty();
+            topProfit.forEach(x => {
+                profitTbody.append(`
+                    <tr>
+                        <td>${x.productName}</td>
+                        <td>${x.quantitySold}</td>
+                        <td>${formatMoney(x.revenue)}</td>
+                        <td>${formatMoney(x.profit)}</td>
+                    </tr>
+                `);
+            });
+        });
+    }
+
+    $('#btnFilter').on('click', function () {
+        var type = $('#filterType').val();
+        var from = $('#fromDate').val();
+        var to = $('#toDate').val();
+
+        if (type !== 'custom') {
+            from = null;
+            to = null;
+        } else {
+            if (from && to && from > to) {
+                alert('Từ ngày phải nhỏ hơn hoặc bằng Đến ngày');
+                return;
+            }
+        }
+
+        loadDashboard(type, from, to);
+    });
+
+    $(document).ready(function () {
+        loadDashboard('all', null, null);
+    });
+</script>

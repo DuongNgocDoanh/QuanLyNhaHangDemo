@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using QuanLyNhaHangDemo.Models;
 using QuanLyNhaHangDemo.Models.ViewModels;
 using QuanLyNhaHangDemo.Repository;
@@ -15,10 +17,18 @@ namespace QuanLyNhaHangDemo.Controllers
         public IActionResult Index()
         {
             List<CartItemModel> cartItems = HttpContext.Session.GetJson<List<CartItemModel>>("Cart") ?? new List<CartItemModel>();
+            var shippingPriceCookie = Request.Cookies["ShippingPrice"];
+            decimal shippingPrice = 0;
+            if (shippingPriceCookie!=null)
+            {
+                var shippingPriceJson = shippingPriceCookie;
+                shippingPrice = JsonConvert.DeserializeObject<decimal>(shippingPriceJson);
+            }
             CartItemViewModel cartVM = new()
             {
                 CartItems = cartItems,
-                GrandTotal = cartItems.Sum(x => x.Quantity * x.Price)
+                GrandTotal = cartItems.Sum(x => x.Quantity * x.Price),
+                ShippingCost = shippingPrice
             };
             return View(cartVM);
 
@@ -28,30 +38,50 @@ namespace QuanLyNhaHangDemo.Controllers
             return View("~/Views/Checkout/Index.cshtml");
         }
         [HttpPost]
-        public async Task<IActionResult> Add(int Id)
+        public IActionResult Add(int Id, int quantity = 1)
         {
-            ProductModel product = await _dataContext.Products.FindAsync(Id);
+            if (quantity <= 0) quantity = 1;
+
+            // Lấy cart từ session
+            List<CartItemModel> cart = HttpContext.Session.GetJson<List<CartItemModel>>("Cart")
+                                      ?? new List<CartItemModel>();
+
+            // Tìm sản phẩm
+            var product = _dataContext.Products.FirstOrDefault(p => p.Id == Id);
             if (product == null)
             {
-                return NotFound(new { success = false, message = "Product not found." });
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
             }
 
-            List<CartItemModel> cart = HttpContext.Session.GetJson<List<CartItemModel>>("Cart") ?? new List<CartItemModel>();
-            CartItemModel cartItem = cart.Where(c => c.ProductId == Id).FirstOrDefault();
-
-            if (cartItem == null)
+            var item = cart.FirstOrDefault(c => c.ProductId == Id);
+            if (item == null)
             {
-                cart.Add(new CartItemModel(product));
+                cart.Add(new CartItemModel
+                {
+                    ProductId = product.Id,
+                    ProductName = product.Name,
+                    Price = product.Price,
+                    Quantity = quantity
+                });
             }
             else
             {
-                cartItem.Quantity += 1;
+                item.Quantity += quantity;
             }
 
+            // Lưu lại session
             HttpContext.Session.SetJson("Cart", cart);
 
-            return Json(new { success = true, message = "Added to cart successfully!", totalItems = cart.Count });
+            int totalItems = cart.Sum(c => c.Quantity);
+
+            return Json(new
+            {
+                success = true,
+                message = $"Đã thêm {quantity} x {product.Name} vào giỏ hàng.",
+                totalItems = totalItems
+            });
         }
+
 
         public async Task<IActionResult> Decrease(int Id)
         {
@@ -78,16 +108,18 @@ namespace QuanLyNhaHangDemo.Controllers
         }
         public async Task<IActionResult> Increase(int Id)
         {
-            ProductModel product = await _dataContext.Products.FindAsync(Id);
+            ProductModel product = await _dataContext.Products.Where(p=>p.Id==Id).FirstOrDefaultAsync();
             List<CartItemModel> cart = HttpContext.Session.GetJson<List<CartItemModel>>("Cart");
             CartItemModel cartItem = cart.Where(c => c.ProductId == Id).FirstOrDefault();
-            if (cartItem == null)
+            if (cartItem.Quantity>=1&&product.Quantity>cartItem.Quantity)
             {
-                cart.Add(new CartItemModel(product));
+                ++cartItem.Quantity;
+                TempData["success"] = "Increase Item to cart Successfully";
             }
             else
             {
-                cartItem.Quantity++;
+                cartItem.Quantity = product.Quantity;
+                TempData["success"] = "Max";
             }
             HttpContext.Session.SetJson("Cart", cart);
             TempData["success"] = "Increase Item to cart Successfully";
@@ -113,6 +145,37 @@ namespace QuanLyNhaHangDemo.Controllers
             HttpContext.Session.Remove("Cart");
             TempData["success"] = "Clear Item to cart Successfully";
             return RedirectToAction("Index");
+        }
+        [HttpPost]
+        public async Task<IActionResult> GetShipping(ShippingModel shipping,string tinh,string quan)
+        {
+            var existingShipping = await _dataContext.Shippings
+                .FirstOrDefaultAsync(s => s.City == tinh && s.District == quan);
+            decimal shippingPrice = 0;
+            if (existingShipping!=null)
+            {
+                shippingPrice = existingShipping.Price;
+            }
+            else
+            {
+                shippingPrice = 350000;
+            }
+            var shippingPriceJson = JsonConvert.SerializeObject(shippingPrice);
+            try
+            {
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(30),
+                    Secure = true,
+                };
+                Response.Cookies.Append("ShippingPrice", shippingPriceJson, cookieOptions);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("Error setting cookie: " + ex.Message);
+            }
+            return Json(new { shippingPrice });
         }
     }
 }

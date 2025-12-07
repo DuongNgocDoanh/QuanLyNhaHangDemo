@@ -1,0 +1,101 @@
+﻿@model IEnumerable<QuanLyNhaHangDemo.Models.OrderDetails>
+
+@{
+    Layout = null;  // để trang riêng biệt, in ra không có layout
+    var order = Model.First().OrderCode;
+    var total = (decimal)ViewBag.Total;
+    var shipping = (decimal)ViewBag.Shipping;
+    var buyer = (string)ViewBag.BuyerName;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Hóa đơn - @order</title>
+
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #f2f2f2; }
+        h2, h4 { margin: 5px 0; }
+        .total-line { font-weight: bold; font-size: 16px; }
+        .print-btn {
+            padding: 10px 15px; background: blue; color: white;
+            border: none; cursor: pointer; margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="print-btn" onclick="window.print()">In hóa đơn</button>
+
+    <h2>Hóa đơn bán hàng</h2>
+    <h4>Mã đơn hàng: @order</h4>
+    <h4>Tên người mua: @buyer </h4>
+    <h4>@ViewBag.TableInfo</h4>
+    <h4>Ngày: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</h4>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Price.ToString("N0") đ</td>
+                    <td>@item.Quantity</td>
+                    <td>@((item.Price * item.Quantity).ToString("N0")) đ</td>
+                </tr>
+            }
+
+            <tr>
+                <td colspan="3" class="total-line">Tổng tiền hàng:</td>
+                <td class="total-line">@total.ToString("N0") đ</td>
+            </tr>
+
+            <tr>
+                <td colspan="3" class="total-line">Phí ship:</td>
+                <td class="total-line">@shipping.ToString("N0") đ</td>
+            </tr>
+
+            <tr>
+                <td colspan="3" class="total-line">Tổng thanh toán:</td>
+                <td class="total-line">@((total + shipping).ToString("N0")) đ</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+<script>
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        const invoice = document.body;
+
+        await html2canvas(invoice).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save("hoadon.pdf");
+        });
+    }
+</script>

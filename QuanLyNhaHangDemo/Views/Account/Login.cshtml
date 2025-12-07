@@ -1,7 +1,25 @@
 ﻿@model LoginViewModel
 @{
-	ViewData["Title"] = "Register";
+    ViewData["Title"] = "Đăng nhập";
 }
+
+@if (TempData["ConfirmSuccess"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["ConfirmSuccess"]
+    </div>
+}
+@if (TempData["ConfirmError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ConfirmError"]
+    </div>
+}
+
+<form asp-action="Login" method="post">
+    <!-- form login như hiện tại -->
+</form>
+
 <section id="">
 	<!--form-->
 	<div class="container">
@@ -27,6 +45,7 @@
 
 						<button class="btn btn-default">Login</button>
 						<a asp-action="Create" asp-controller="Account">Tao tai khoan moi</a>
+						<a asp-action="ForgotPassword" asp-controller="Account">Quên mật khẩu?</a>
 					</form>
 				</div><!--/login form-->
 			</div>

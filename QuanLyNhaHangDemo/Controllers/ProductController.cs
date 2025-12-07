@@ -18,24 +18,45 @@ namespace QuanLyNhaHangDemo.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Details(int Id)
+        public async Task<IActionResult> Details(int id)
         {
-            if(Id==null) return RedirectToAction("Index");
-            var productsById = _dataContext.Products.Include(p=>p.Ratings).Where(p => p.Id == Id).FirstOrDefault();
+            if (id == 0) return RedirectToAction("Index");
+
+            // Lấy sản phẩm + Category + Brand + Ratings
+            var product = await _dataContext.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Ratings)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product == null)
+                return RedirectToAction("Index");
+
+            // Lấy định mức nguyên liệu từ bảng ProductMaterials theo ProductId
+            var materials = await _dataContext.ProductMaterials
+                .Include(pm => pm.Material)          // để dùng pm.Material.Name, pm.Material.Unit
+                .Where(pm => pm.ProductId == id)
+                .ToListAsync();
+
+            // Sản phẩm liên quan
             var relatedProducts = await _dataContext.Products
-                .Where(p => p.CategoryId == productsById.CategoryId && p.Id != productsById.Id)
+                .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id)
                 .OrderByDescending(p => p.Id)
                 .Take(4)
                 .ToListAsync();
+
             ViewBag.RelatedProducts = relatedProducts;
 
             var viewModel = new ProductDetailsViewModel
             {
-                ProductDetails = productsById
-                
+                ProductDetails = product,
+                Materials = materials                     // List<ProductMaterialModel>
             };
+
             return View(viewModel);
         }
+
+
         public async Task<IActionResult> Search(string searchTerm)
         {
             var products = await _dataContext.Products

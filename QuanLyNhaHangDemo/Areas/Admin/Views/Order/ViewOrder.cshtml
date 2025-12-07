@@ -1,24 +1,19 @@
 ﻿@model IEnumerable<OrderDetails>
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["title"] = "Order Details";
-    decimal total = 0; // Store total amount
+    decimal total = 0;
     decimal subtotal = 0;
-   
 }
 
-<!DOCTYPE html>
+<h3>Order Details</h3>
+<a href="/Admin/Order/Invoice?ordercode=@Model.First().OrderCode"
+   class="btn btn-primary" target="_blank">
+    In hóa đơn
+</a>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Order Details</title>
-</head>
-<body>
-    <h3>Order Details</h3>
-
-
-    <div class="table table-responsive">
+<div class="table table-responsive">
     <table class="table" id="detail_order">
         <thead>
             <tr>
@@ -33,14 +28,15 @@
             </tr>
         </thead>
         <tbody>
-           
             @foreach (var item in Model)
             {
-                subtotal = item.Quantity * item.Price; //số lượng * giá
-                total += subtotal; 
+                subtotal = item.Quantity * item.Price;
+                total += subtotal;
                 <tr>
-                    <input type="hidden" asp-for="@item.OrderCode" class="getId" />
-                    <td>@item.Id</td>
+                    <td>
+                        <input type="hidden" value="@item.OrderCode" class="getId" />
+                        @item.Id
+                    </td>
                     <td>@item.OrderCode</td>
                     <td>@item.UserName</td>
                     <td>@item.Product.Name</td>
@@ -52,44 +48,40 @@
                         {
                             <span class="text text-success">Đang Chuẩn Bị</span>
                         }
-                        else if(item.Status==1)
+                        else if (item.Status == 1)
                         {
-                            <span class="text text-erroe">Đang chế biến</span>
+                            <span class="text text-warning">Đang chế biến</span>
                         }
-                        else
+                        else if (item.Status == 2)
                         {
-                            <span class="text text-erroe">Hoàn Thành</span>
+                            <span class="text text-primary">Hoàn Thành</span>
+                        }
+                        else if (item.Status == 3)
+                        {
+                            <span class="text text-danger">Đã Hủy</span>
                         }
                     </td>
                 </tr>
             }
+
             <tr>
-                <td>Total:</td>
+                <td><strong>Total:</strong></td>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td>Tổng : @total.ToString("#,##0 đ")</td>
+                <td><strong>Tổng:</strong> @total.ToString("#,##0 đ")</td>
+                <td><strong>Shipping Cost:</strong> @ViewBag.ShippingCost</td>
                 <td>
-                        <select class="form-control select-update-order">
-                            @foreach (var item in ViewBag.StatusList as List<SelectListItem>)
-                            {
-                                <option value="@item.Value" selected="@(item.Value == ViewBag.Status.ToString() ? "selected" : null)">
-                                    @item.Text
-                                </option>
-                            }
-                        </select>
+                    <select class="form-control select-update-order"
+                            asp-items="@(ViewBag.StatusList as List<SelectListItem>)">
+                    </select>
                 </td>
-                    
             </tr>
         </tbody>
     </table>
-   
-    </div>
-</body>
+</div>
 
-</html>
 @section Scripts{
     <script>
         new DataTable('#detail_order', {
@@ -98,15 +90,11 @@
                     buttons: [
                         {
                             extend: 'pdf',
-                            exportOptions: {
-                                 columns: [0, 1, 2, 3, 4, 5, 6]
-                            }
+                            exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
                         },
                         {
                             extend: 'print',
-                            exportOptions: {
-                                columns: [0, 1, 2, 3, 4, 5, 6]
-                            }
+                            exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
                         }
                     ]
                 }
@@ -114,38 +102,34 @@
         });
     </script>
 
-
     <script>
         $(document).ready(function () {
             $('.select-update-order').change(function () {
-                var status = $(this).val(); //status = 1
-                var ordercode = $('.getId').val(); //
-                // alert(status);
-                // alert(ordercode);
+                var status = $(this).val();
+
+                // LẤY ĐÚNG ordercode của DÒNG hiện tại
+                var ordercode = $(this).closest('tr').closest('tbody')
+                    .find('.getId').first().val(); 
+                // nếu muốn chắc chắn lấy từ dòng trên, có thể đổi cách tổ chức HTML cho dễ.
 
                 $.ajax({
                     type: "POST",
-                    url: "@Url.Action("UpdateOrder")",
-                    data: { status: status, ordercode: ordercode }, // Send data to the server
-                   
+                    url: "@Url.Action("UpdateOrder", "Order", new { area = "Admin" })",
+                    data: { status: status, ordercode: ordercode },
                     success: function (result) {
-                        // Handle successful update
                         if (result.success) {
-
                             Swal.fire("Cập nhật đơn hàng thành công.").then(() => {
-                                window.location.href = '@Url.Action("Index")';  // Chuyển lại trang Index
+                                window.location.href = '@Url.Action("Index", "Order", new { area = "Admin" })';
                             });
                         } else {
-                          
-                            Swal.fire("Cập nhật đơn hàng thất bại." + result.message);
-                           
+                            Swal.fire("Cập nhật đơn hàng thất bại: " + (result.message || ""));
                         }
+                    },
+                    error: function () {
+                        Swal.fire("Có lỗi khi gọi server.");
                     }
-                   
                 });
             });
         });
     </script>
 }
-
-    

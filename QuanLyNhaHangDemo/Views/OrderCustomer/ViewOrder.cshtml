@@ -1,0 +1,93 @@
+﻿@using QuanLyNhaHangDemo.Models
+@model IEnumerable<OrderDetails>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var order = ViewBag.Order as OrderModel;
+    decimal total = (decimal)ViewBag.Total;
+    decimal shipping = (decimal)ViewBag.Shipping;
+    decimal grand = (decimal)ViewBag.GrandTotal;
+
+    // 🟢 Hàm helper đổi status món -> text
+    string GetItemStatusText(int status)
+    {
+        return status switch
+        {
+            0 => "Đang chuẩn bị",
+            1 => "Đang chế biến",
+            2 => "Hoàn thành",
+            _ => "Không xác định"
+        };
+    }
+}
+
+<h3>Chi tiết đơn hàng: @order.OrderCode</h3>
+<p>Ngày đặt: @order.CreatedDate.ToString("dd/MM/yyyy HH:mm")</p>
+<p>
+    Trạng thái:
+    @{
+        var status = order.Status;
+    }
+
+    @if (status == 0)
+    {
+        <span class="text text-success">Đơn hàng mới</span>
+    }
+    else if (status == 1)
+    {
+        <span class="text text-warning">Đang xử lý</span>
+    }
+    else if (status == 2)
+    {
+        <span class="text text-primary">Hoàn thành</span>
+    }
+    else if (status == 3)
+    {
+        <span class="text text-danger">Đã hủy</span>
+    }
+    else
+    {
+        <span>Không xác định</span>
+    }
+</p>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Sản phẩm</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Thành tiền</th>
+            <th>Trạng thái món</th>   @* 🟢 thêm cột *@
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var line = item.Price * item.Quantity;
+            <tr>
+                <td>@item.Product.Name</td>
+                <td>@item.Price.ToString("N0") đ</td>
+                <td>@item.Quantity</td>
+                <td>@line.ToString("N0") đ</td>
+                <td>@GetItemStatusText(item.Status)</td>  @* 🟢 hiển thị trạng thái món *@
+            </tr>
+        }
+        <tr>
+            <td colspan="4" class="text-end"><strong>Tạm tính:</strong></td>
+            <td><strong>@total.ToString("N0") đ</strong></td>
+        </tr>
+        <tr>
+            <td colspan="4" class="text-end"><strong>Phí ship:</strong></td>
+            <td><strong>@shipping.ToString("N0") đ</strong></td>
+        </tr>
+        <tr>
+            <td colspan="4" class="text-end"><strong>Tổng thanh toán:</strong></td>
+            <td><strong>@grand.ToString("N0") đ</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<a class="btn btn-secondary" asp-controller="Account" asp-action="History">
+    ← Quay lại lịch sử đơn
+</a>

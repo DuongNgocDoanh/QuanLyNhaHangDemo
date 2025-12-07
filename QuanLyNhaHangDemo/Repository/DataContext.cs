@@ -20,5 +20,20 @@ namespace QuanLyNhaHangDemo.Repository
         public DbSet<SliderModel> Sliders { get; set; }
         public DbSet<RatingModel> Ratings { get; set; }
 
+        public DbSet<ProductQuantityModel>  ProductQuantities { get; set; }
+        public DbSet<ShippingModel> Shippings { get; set; }
+
+        public DbSet<StatisticalModel> Statisticals { get; set; }
+        public DbSet<MaterialModel> Materials { get; set; }
+        public DbSet<InventoryTransactionModel> InventoryTransactions { get; set; }
+        public DbSet<ProductMaterialModel> ProductMaterials { get; set; }
+
+        public DbSet<UserModel> userModels { get; set; }
+
+        public DbSet<TableModel> tableModels { get; set; }
+        public DbSet<ReservationModel> Reservations { get; set; }
+
+
+
     }
 }

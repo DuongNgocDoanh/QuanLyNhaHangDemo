@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // nhớ import để dùng ToListAsync()
+using Microsoft.EntityFrameworkCore;
 using QuanLyNhaHangDemo.Models;
 using QuanLyNhaHangDemo.Repository;
-using System.Drawing.Drawing2D;
 
 namespace QuanLyNhaHangDemo.Controllers
 {
@@ -15,27 +14,51 @@ namespace QuanLyNhaHangDemo.Controllers
             _dataContext = context;
         }
 
-        public async Task<IActionResult> Index(string Slug = "")
+        public async Task<IActionResult> Index(string Slug = "", string sort_by = "",decimal? startprice=null,decimal? endprice=null)
         {
-            // Tìm danh mục theo slug
             var category = await _dataContext.Categories
-                .FirstOrDefaultAsync(c => c.Slug == Slug&&c.Status==1);
+                .FirstOrDefaultAsync(c => c.Slug == Slug && c.Status == 1);
 
-            // Nếu không tồn tại, quay về trang chủ
             if (category == null)
                 return RedirectToAction("Index", "Home");
 
-            // Lấy danh sách sản phẩm theo danh mục
-            var productsByCategory = await _dataContext.Products
+            IQueryable<ProductModel> productsByCategory = _dataContext.Products
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
-                .Where(p => p.CategoryId == category.Id
-                            && p.Brand.Status == 1)
-                .OrderByDescending(p => p.Id)
-                .ToListAsync();
+                .Where(p => p.CategoryId == category.Id && p.Brand.Status == 1);
+            if (startprice.HasValue && endprice.HasValue && startprice <= endprice)
+            {
+                productsByCategory = productsByCategory
+                    .Where(p => p.Price >= startprice.Value && p.Price <= endprice.Value);
+            }
 
-            // Gửi danh sách sản phẩm sang View
-            return View(productsByCategory);
+            switch (sort_by)
+            {
+                case "price_increase":               // Giá thấp → cao
+                    productsByCategory = productsByCategory.OrderBy(p => p.Price);
+                    break;
+
+                case "price_decrease":               // Giá cao → thấp
+                    productsByCategory = productsByCategory.OrderByDescending(p => p.Price);
+                    break;
+
+                case "price_oldest":                 // Cũ nhất
+                    productsByCategory = productsByCategory.OrderBy(p => p.Id);
+                    break;
+
+                case "price_newest":                 // Mới nhất
+                default:
+                    productsByCategory = productsByCategory.OrderByDescending(p => p.Id);
+                    break;
+
+                
+
+            }
+
+
+            var model = await productsByCategory.ToListAsync();
+            return View(model);
         }
+
     }
 }

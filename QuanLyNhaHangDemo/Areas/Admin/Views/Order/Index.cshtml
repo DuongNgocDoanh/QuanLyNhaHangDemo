@@ -2,58 +2,81 @@
 @{
     ViewData["title"] = "Orders Listed";
 }
+
 <h3>List Order</h3>
+<a asp-action="CompletedOrders"
+   asp-controller="Order"
+   class="btn btn-success mb-3">
+    Xem đơn hoàn thành & doanh thu
+</a>
 
 <table class="table">
     <thead>
         <tr>
-            <th scope="col">#</th>
-            <th scope="col">Order Code</th>
-            <th scope="col">User Name</th>
-            <th scope="col">Order Date</th>
-            <th scope="col">Order Status</th>
-
+            <th>#</th>
+            <th>Order Code</th>
+            <th>Shipping Cost</th>
+            <th>User Name</th>
+            <th>Order Date</th>
+            <th>Order Status</th>
+            <th>Delete</th>
+            <th>Action</th>
+            
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
             <tr>
-                <th>#</th>
-                <th scope="row">@item.OrderCode</th>
+                <td>#</td>
+                <td>@item.OrderCode</td>
+                <td>@item.ShippingCost.ToString("#,##0 VND")</td>
                 <td>@item.UserName</td>
                 <td>@item.CreatedDate</td>
-             
                 <td>
-                    @if (item.Status == 1)
+                    @if (item.Status == 0)
                     {
                         <span class="text text-success">Đơn hàng mới</span>
                     }
+                    else if (item.Status == 1)
+                    {
+                        <span class="text text-warning">Đang xử lý</span>
+                    }
                     else if (item.Status == 2)
                     {
-                        <span class="text text-success">Hoàn thành</span>
+                        <span class="text text-primary">Hoàn thành</span>
                     }
                     else if (item.Status == 3)
                     {
-                        <span class="text text-success">Đã thanh toán</span>
+                        <span class="text text-danger">Đã hủy</span>
                     }
-                    else if (item.Status == 4)
-                    {
-                        <span class="text text-success">Đang xử lý</span>
-                    }
-                    else if (item.Status == 5)
-                    {
-                        <span class="text text-success">Đã hủy</span>
-                    }
+                </td>
+                @if (item.Status == 3)
+                {
+                    <td>
+                        <a asp-action="Delete"
+                           asp-controller="Order"
+                           asp-route-ordercode="@item.OrderCode"
+                           class="btn btn-danger btn-sm confirmDeletion">
+                            Delete
+                        </a>
+                    </td>
+                }
+               
+                @if (item.Status != 3)
+                {
+                    <td>
+                    <a asp-action="ViewOrder"
+                       asp-controller="Order"
+                       asp-route-ordercode="@item.OrderCode"
+                       class="btn btn-warning btn-sm">
+                        View Order
+                    </a>
                     
                 </td>
-                <td>
-                    <a asp-action="ViewOrder" class="btn btn-warning btn-sm" asp-controller="Order" asp-route-ordercode="@item.OrderCode">View Order</a>
-                    <a asp-action="Delete" class="btn btn-danger btn-sm confirmDeletion" asp-controller="Order" asp-route-ordercode="@item.OrderCode">Delete</a>
-                </td>
+                }
+                
             </tr>
         }
-
-
     </tbody>
 </table>
